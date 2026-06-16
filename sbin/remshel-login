@@ -1,0 +1,33 @@
+#!/bin/bash
+# remshel-login — exec the INVOKING user's own login shell, as a login shell.
+#
+# Invoked ONLY as:  sudo -n -u <holistic user> /usr/local/sbin/remshel-login
+# sudoers restricts the run-as set to %smbusers and pins the command to this script
+# with NO arguments, so remshel can never run anything else or become anyone else.
+# Identity comes solely from sudo's -u (which remshel sets to the authenticated user);
+# this script takes no username and trusts only its own resolved /etc/passwd entry.
+#
+# The login shell in /etc/passwd is the single source of truth for shell access:
+# a nologin/false shell is refused here too (defence in depth with the daemon).
+set -eu
+
+user="$(id -un)"
+entry="$(getent passwd "$user")" || { echo "remshel-login: no passwd entry for $user" >&2; exit 4; }
+home="$(printf '%s' "$entry" | cut -d: -f6)"
+sh="$(printf '%s' "$entry" | cut -d: -f7)"
+
+case "$sh" in
+  ""|*/nologin|*/false) echo "remshel-login: shell access disabled for $user" >&2; exit 3 ;;
+esac
+[ -x "$sh" ] || { echo "remshel-login: login shell not executable: $sh" >&2; exit 4; }
+
+# Build a clean login environment for the target user (sudo env_reset already cleared it).
+export HOME="$home"
+export USER="$user"
+export LOGNAME="$user"
+export SHELL="$sh"
+export TERM="${TERM:-xterm-256color}"
+cd "$HOME" 2>/dev/null || cd /
+
+# `-l` makes the shell a login shell (argv[0] prefixed with '-').
+exec -l "$sh"

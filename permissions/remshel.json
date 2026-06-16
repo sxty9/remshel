@@ -1,0 +1,22 @@
+{
+  "service": "remshel",
+  "version": 1,
+  "categories": [
+    {
+      "id": "shell",
+      "label": "Remote Shell",
+      "description": "Zugang zur Remote-Shell. Die Shell läuft mit genau den Linux-Rechten des jeweiligen Benutzers.",
+      "permissions": [
+        {
+          "id": "access",
+          "label": "Shell-Freigabe",
+          "description": "Erlaubt eine Remote-Shell im Browser. Quelle der Wahrheit ist die Linux-Login-Shell des Benutzers: an = echte Shell (/bin/bash), aus = nologin. Standardmäßig aktiviert.",
+          "type": "shell",
+          "shell": "/bin/bash",
+          "default": true,
+          "sensitive": true
+        }
+      ]
+    }
+  ]
+}
